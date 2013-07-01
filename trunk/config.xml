@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<config>
+	<!-- Regular Expressions for searching / extraction -->
+	<!-- Each expression is applied in order. Expressions that are used as filters are applied cumulatively. Expressions
+	used as searches are applied repeatedly on original data. -->
+	<regex>
+		<!-- Any matching patterns are considered code comments and therefore replaced with a blank string -->
+		<category name="striphtmlcomments" type="filter">
+			<expression options="gm"><![CDATA[\<![ \r\n\t]*(--([^\-]|[\r\n]|-[^\-])*--[ \r\n\t]*)\>]]></expression>
+		</category>
+		<!-- Used to match and extract valid links from HTML <A> tags -->
+		<category name="atags" type="search">
+			<expression options="gi"><![CDATA[\\s*(?i)href\\s*=\\s*(\"([^\"]*\")|'[^']*'|([^'\">\\s]+))]]></expression>
+		</category>
+		<!-- Used to match and extract valid url pattern from HTML links extracted above -->
+		<category name="url" type="search">
+			<expression options="gi"><![CDATA[\"([^\"]*\")|'[^']*'|([^'\">\\s]+)]]></expression>
+		</category>
+		<!-- Used to match and extract URLs from anywhere within the markup -->
+		<category name="urls" type="search">
+			<expression options="gi"><![CDATA[http(s)*:\/\/[abcdefghijklmnopqrstuvwxyz0123456789\.\_~:\/\?#@!\$&\(\)\*\+,;=|-]+]]></expression>
+		</category>
+	</regex>
+</config>
