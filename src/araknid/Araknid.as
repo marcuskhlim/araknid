@@ -58,10 +58,12 @@ package araknid {
 			this.dbFileField.text=Settings.dbFileURL;
 			this._db=new Database();				
 			if (isNew) {
-				this._db.addURLToCrawlQueue(Settings.startCrawlURL);
-			}//if			
-			this.crawl();
+				this.currentCrawlURLField.text = Settings.startCrawlURL;				
+			} else {
+				this.currentCrawlURLField.text = this._db.nextQueuedCrawlURL;
+			}//else
 		}//openDatabase
+				
 		
 		private function crawl(eventObj:SwagTimeEvent=null):void {	
 			if (this._countdownTimer!=null) {
@@ -75,7 +77,10 @@ package araknid {
 			this.bytesLoadedField.text="0 bytes (0%)";
 			var nextURL:String=this._db.nextQueuedCrawlURL;
 			if (nextURL==null) {
-				nextURL=Settings.startCrawlURL;
+				nextURL = this.currentCrawlURLField.text;				
+			}//if
+			if ((nextURL == null) || (nextURL == "")) {
+				nextURL = Settings.startCrawlURL;
 			}//if
 			this.currentCrawlURLField.text=nextURL;
 			this.nextCrawlTimeField.text="Now";

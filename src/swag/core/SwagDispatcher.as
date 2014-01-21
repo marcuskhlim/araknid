@@ -43,7 +43,7 @@ package swag.core {
 				return (false);
 			}//if
 			var listenerCount:uint=listeners.length;
-			var dispatchSent:Boolean=false;	
+			var dispatchSent:Boolean=false;			
 			//Prefetch the listener count in case new ones are added or removed while dispatching
 			for (var count:uint=0; count<listenerCount; count++) {
 				//Array may be manipulated while dispatching so do this check every time.
@@ -51,7 +51,7 @@ package swag.core {
 					return (dispatchSent);
 				}//if					
 				var currentListener:SwagEventListener=listeners[count] as SwagEventListener;				
-				if ((eventObj.type==currentListener.type) && sourcesMatch(source, currentListener.source)) {						
+				if ((eventObj.type==currentListener.type) && sourcesMatch(source, currentListener.source)) {					
 					if (currentListener.invoke(eventObj, source)==false) {
 						removeEventListener(currentListener.type, currentListener.method);
 					} else {
