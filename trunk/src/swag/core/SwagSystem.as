@@ -7,9 +7,7 @@ package swag.core {
 	import flash.system.Capabilities;
 	import flash.system.System;
 	import flash.utils.Timer;
-	import flash.utils.describeType;
 	import flash.utils.getDefinitionByName;
-	import flash.utils.getQualifiedClassName;
 	
 	import swag.core.SwagDataTools;
 	import swag.core.SwagDispatcher;
@@ -190,86 +188,6 @@ package swag.core {
 			}//catch
 			return (null);
 		}//getDefinition
-		
-		/**
-		 * Returns the class name (without package), of the supplied object reference.
-		 *  
-		 * @param objectRef The object to retrieve the class name for.
-		 * 
-		 * @return The class name (without packages), of the supplied object, or <em>null</em> if it couldn't
-		 * be determined. 
-		 * 
-		 */
-		public static function getClassName(objectRef:*):String {
-			if (objectRef==null) {
-				return (null);
-			}//if
-			var fullClassName:String=getQualifiedClassName(objectRef);
-			try {
-				var className:String=new String(fullClassName.split("::")[1]);
-				return (className);
-			} catch (e:*) {
-				return (null);
-			}//catch
-			return (null);
-		}//getClassName
-		
-		/**
-		 * Returns a list of all implemented interfaces of a target object.
-		 *  
-		 * @param objectref The object to evaluate for implemented interfaces.
-		 * 
-		 * @return Ann array containing the fully qualified interface names (including packages),
-		 * in standard dot notation, of the specified object. <em>Null</em> is returned if a list
-		 * of interfaces can't be determined. 
-		 * 
-		 */
-		public static function getInterfaces(objectRef:*):Array {
-			if (objectRef==null) {
-				return (null);
-			}//if
-			try {
-				var typeDef:XML=describeType(objectRef);
-				var interfaceNodes:XMLList=typeDef.implementsInterface as XMLList;
-				var returnList:Array=new Array();
-				for (var count:uint=0; count<interfaceNodes.length(); count++) {
-					var currentNode:XML=interfaceNodes[count] as XML;
-					var typeAttr:String=new String(currentNode.@type);
-					typeAttr=typeAttr.split("::").join(".");
-					returnList.push(typeAttr);
-				}//for
-				return (returnList);
-			} catch (e:*) {
-				return (null);
-			}//catch
-			return (null);
-		}//getInterfaces
-		
-		/**
-		 * Returns <em>true</em> if the specified object implements the specified interface,
-		 * or <em>false</em> otherwise.
-		 *  
-		 * @param objectRef The object to evaluate.
-		 * @param interfaceName The fully qualified interface name (including package), in dot notation,
-		 * to evaluate.
-		 * 
-		 * @return <em>True</em> if the specified object implements the specified interface, <em>false</em>
-		 * otherwise, or if the object is <em>null</em>.
-		 * 
-		 */
-		public static function implementsInterface(objectRef:*, interfaceName:String):Boolean {
-			var interfaceList:Array=getInterfaces(objectRef);
-			if (interfaceList==null) {
-				return (false);
-			}//if
-			for (var count:uint=0; count<interfaceList.length; count++) {
-				var currentInterface:String=interfaceList[count] as String;
-				if (currentInterface==interfaceName) {
-					return (true);
-				}//if
-			}//for
-			return (false);
-		}//implementsInterface
 		
 		/**
 		 * Begins monitoring for the existence of a property within a specific object, and invokes a method

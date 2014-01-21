@@ -1,23 +1,21 @@
 package swag.core {	
 	
+	import flash.display.DisplayObject;
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
-	import flash.display.DisplayObject;
-	import flash.display.DisplayObjectContainer;
-	import flash.display.Loader;
 	import flash.display.PixelSnapping;
-	import flash.events.Event;
 	import flash.geom.Matrix;
-	import flash.geom.Point;
-	import flash.utils.ByteArray;
+	import flash.events.Event;
 	import flash.utils.describeType;
 	import flash.utils.getDefinitionByName;
 	import flash.xml.XMLDocument;
 	import flash.xml.XMLNode;
+	import flash.utils.ByteArray;
+	import flash.display.Loader;
 	
 	import swag.core.SwagDispatcher;
 	import swag.interfaces.core.ISwagDataTools;
-	
+
 	/**
 	 * The <code>SwagDataTools</code> class contains a variety of static methods and properties to assist with a variety
 	 * of data modification and verification tasks. For the most part, methods and properties can be accessed directly
@@ -48,12 +46,7 @@ package swag.core {
 		 * Contains the range of all separator ASCII characters (space, hyphen, underscore, back slash, forward slash), 
 		 * that can be used with various string operations. 
 		 */
-		public static const SEPARATOR_RANGE:String=" -_\\/\n\r\t";
-		/**
-		 * Contains the range of all white space ASCII characters (spaces, tabs, newlines, carriage returns), 
-		 * that can be used with various string operations. 
-		 */
-		public static const WHITESPACE_RANGE:String=" \n\r\t";
+		public static const SEPARATOR_RANGE:String=" -_\\/";
 		
 		/**
 		 * 
@@ -103,17 +96,13 @@ package swag.core {
 		 * <em>false</em> is returned.
 		 * 
 		 */
-		public static function hasData(... args):Boolean {
-			try {
-				if (args[0]==undefined) {
-					return (false);
-				}//if
-				if (args[0]==null) {
-					return (false);
-				}//if
-			} catch (e:*) {
+		public static function hasData(... args):Boolean {			
+			if (args[0]==undefined) {
 				return (false);
-			}//catch
+			}//if
+			if (args[0]==null) {
+				return (false);
+			}//if
 			return (true);
 		}//hasData
 		
@@ -130,16 +119,12 @@ package swag.core {
 		 * 
 		 */
 		public static function isXML(... args):Boolean {
-			try {
-				if (args == null) {				
-					return (false);
-				}//if
-				if (args[0] == undefined) {				
-					return (false);
-				}//if
-			} catch (e:*) {
+			if (args == null) {				
 				return (false);
-			}//catch
+			}//if
+			if (args[0] == undefined) {				
+				return (false);
+			}//if
 			if ((args[0]==String) && (args[1]==true)){
 				var localString:String=new String(args[0]);
 				try {					
@@ -542,6 +527,26 @@ package swag.core {
 		}//getStringAfter
 		
 		/**
+		 * Finds and returns all strings denoted by a starting and ending pattern and returns the results in
+		 * an array.
+		 * 
+		 * @param sourceString The source string to search through.
+		 * @param startPattern The starting string pattern to find. The resulting string(s) will include this pattern.
+		 * @param endPattern The end string pattern to find. The resulting string(s) will include this pattern.
+		 * 
+		 * @return An array of strings found in the <code>sourceString</code> that match the starting and ending
+		 * string patterns. May be <em>null</em> if the supplied parameters are invalid.
+		 */
+		public static function findAllStrings(sourceString:String=null, startPattern:String=null, endPattern:String=null):Array {
+			if ((sourceString==null) || (startPattern==null) || (endPattern==null)) {
+				return (null);
+			}//if
+			var returnArray:Array=new Array();
+			//TODO: Complete
+			return (returnArray);
+		}//findAllStrings
+		
+		/**
 		 * Parses / splits a string containing software version information (for example, "3.2.1 b"), into native (numeric / boolean) values.
 		 * 
 		 * <p>The format of a typical version string is: <strong>majorVersion.minorVersion.buildNumber.internalBuildNumber a / b</strong>, where
@@ -600,7 +605,7 @@ package swag.core {
 			if (hasData(versionParts[3])) {
 				var finalPart:String=new String(versionParts[3] as String);
 				var stripCharacters:String=SwagDataTools.LOWERCASE_RANGE+SwagDataTools.UPPERCASE_RANGE
-					+SwagDataTools.PUNCTUATION_RANGE+SwagDataTools.SEPARATOR_RANGE;
+										+SwagDataTools.PUNCTUATION_RANGE+SwagDataTools.SEPARATOR_RANGE;
 				returnObject.internalBuild=int(stripChars(finalPart, stripCharacters));						
 			}//if			
 			if (stringContains(localVersionString, "a", false)) {
@@ -610,103 +615,6 @@ package swag.core {
 			}//else if
 			return (returnObject);
 		}//parseVersionString
-		
-		/**
-		 * Converts a value in radians to its corresponding value in degrees.
-		 * 
-		 * @param radians The radians value to convert to degrees.
-		 * 
-		 * @return The degree equivalent of the input radians value. 
-		 * 
-		 */
-		public static function toDegrees(radians:Number):Number {
-			var returnDegs:Number=radians*(180/Math.PI);
-			return (returnDegs);
-		}//toDegrees
-		
-		/**
-		 * Converts a value in degrees to its corresponding value in radians.
-		 * 
-		 * @param degrees The degrees value to convert to radians.
-		 * 
-		 * @return The radians equivalent of the input degrees value. 
-		 * 
-		 */
-		public static function toRadians(degrees:Number):Number {
-			var returnRads:Number=degrees*(Math.PI/180);
-			return (returnRads);
-		}//toRadians
-		
-		/**
-		 * Returns the angle, in radians, between two planar line segments.
-		 * 
-		 * @param line1 An object containing numeric properties x1, y1, and x2, y2 which define the first line segment.
-		 * @param line2 An object containing numeric properties x1, y1, and x2, y2 which define the second line segment.
-		 * 
-		 * @return The angle between the two line segments, in degrees. 
-		 * 
-		 */
-		public static function getAngle(line1:Object=null, line2:Object=null):Number {
-			if ((line1==null) || (line2==null)) {
-				return (0);
-			}//if
-			if (!hasData(line1.x1)) {
-				line1.x1=0;
-			}//if
-			if (!hasData(line1.x2)) {
-				line1.x2=0;
-			}//if			
-			if (!hasData(line1.y1)) {
-				line1.y1=0;
-			}//if
-			if (!hasData(line1.y2)) {
-				line1.y2=0;
-			}//if			
-			if (!hasData(line2.x1)) {
-				line2.x1=0;
-			}//if
-			if (!hasData(line2.x2)) {
-				line2.x2=0;
-			}//if			
-			if (!hasData(line2.y1)) {
-				line2.y1=0;
-			}//if
-			if (!hasData(line2.y2)) {
-				line2.y2=0;
-			}//if
-			//Adjust to 0,0
-			line1.x2-=line1.x1;
-			line1.y2-=line1.y1;			
-			line2.x2-=line2.x1;
-			line2.y2-=line2.y1;			
-			var angle1:Number = Math.atan2(line1.y2, line1.x2);
-			var angle2:Number = Math.atan2(line2.y2, line2.x2);
-			var returnAngle:Number = Math.abs(180*(angle1 - angle2)/Math.PI);
-			return (returnAngle);
-		}//getAngle
-		
-		/**
-		 * Returns a point on an elipse with x and y radii at a specified angle. The elipse
-		 * is assumed to have an origin at coordinates 0,0, and the angle (in degrees) begins at
-		 * the right-hand edge of the elipse as in standard geometry. If both the x and y radii are
-		 * the same, a circlular coordinate is returned. 
-		 * 
-		 * @param xRadius The x, or horizontal radius of the elipse.
-		 * @param yRadius The y, or vertical radius of the elipse.
-		 * @param angle The angle of the point, in degrees.
-		 * 
-		 * @return A point on the specified elipse at the specified angle. Unless this point is offset to
-		 * a new x,y location, the returned <code>Point</code> object's <code>length</code> property can
-		 * be used to determing the distance, in pixels, from the elipse's origin to the point.
-		 * 
-		 */
-		public static function getElipseCoords(xRadius:Number, yRadius:Number, angle:Number):Point {
-			var returnPoint:Point=new Point();
-			var radianAngle:Number=toRadians(angle);
-			returnPoint.x=xRadius*Math.cos(radianAngle);
-			returnPoint.y=yRadius*Math.sin(radianAngle);			
-			return (returnPoint);
-		}//getElipseCoords
 		
 		/**
 		 * Converts the to its hexadecimal representation as a string. 		 
@@ -958,64 +866,13 @@ package swag.core {
 		}//setBit
 		
 		/**
-		 * Converts an input value to a boolean value. Typical input values can include strings such
-		 * as "true", "false", "yes", "no", "on", "off", "1", "0", etc., and numbers such as 1 and 0.
-		 *  
-		 * @param input The input value to attempt to convert to a valid boolean value.
-		 * @param defaultValue The default boolean value to return if the input parameter can't be converted.
-		 * 
-		 * @return A valid boolean value based on the input, or the default value if conversion can't be completed. 
-		 * 
-		 */
-		public static function toBoolean(input:*, defaultValue:Boolean=false):Boolean {
-			if (input==null) {
-				return (defaultValue);
-			}//if
-			if ((input is XML) || (input is XMLList)) {
-				input=new String(input.toString());
-			}//if
-			if (input is String) {
-				var inputString:String=new String(input);
-				inputString=inputString.toLowerCase();
-				inputString=stripOutsideChars(inputString, SEPARATOR_RANGE);
-				switch (inputString) {
-					case "true" : return (true); break;
-					case "t" : return (true); break;
-					case "yes" : return (true); break;
-					case "y" : return (true); break;
-					case "on" : return (true); break;
-					case "active" : return (true); break;
-					case "set" : return (true); break;
-					case "1" : return (true); break;
-					case "false" : return (false); break;
-					case "f" : return (false); break;
-					case "no" : return (false); break;
-					case "n" : return (false); break;
-					case "off" : return (false); break;
-					case "inactive" : return (true); break;
-					case "unset" : return (true); break;
-					case "0" : return (false); break;
-					default : return (defaultValue); break;
-				}//switch
-			}//if
-			if ((input is Number) || (input is uint) || (input is int)) {
-				if (input==1) {
-					return (true);
-				} else {
-					return (false);
-				}//else					
-			}//if
-			return (defaultValue);
-		}//toBoolean
-		
-		/**
 		 * Sizes a target <code>DisplayObject</code> while maintaining the aspect ratio. The resulting image will be
 		 * sized according to the largest of the width and height parameters. 
 		 * 
 		 * @param target The <code>DisplayObject</code> to size while maintaining the aspect ratio.
 		 * @param targetWidth The desired width of the target object. This value is used if it's larger than the target height.
 		 * @param targetHeight The desired height of the target object. This value is used if it's larger than the target width.
-		 * @param scaleBitmap If the <code>target</code> parameter is a <code>Bitmap</code>, setting this value will force a
+		 * @param scaleBitmap If the <code>target</code> parameter is a <code>BitMap</code>, setting this value will force a
 		 * transform to be applied to the resulting <code>BitMap</code> object. 
 		 * 
 		 * @return The target object, of the same type as the <code>target</code> parameter sized to either the largest width 
@@ -1055,27 +912,6 @@ package swag.core {
 			}//else
 			return (target);
 		}//sizeWithAspectRatio
-		
-		/**
-		 * Creates a bitmap from a linked <code>BitmapData</code> object in the library.
-		 *  
-		 * @param bitmapClass The fully qualified name of the library item to create. The item must
-		 * be of type <code>BitmapData</code>, otherwise this method will fail.
-		 *
-		 * @return The newly created <code>Bitmap</code> object created from the library bitmap data,
-		 * or <em>null</em> if it couldn't be created.
-		 */
-		public static function createBitmap(bitmapClass:String):Bitmap {
-			try {
-				var classRef:Class=getDefinitionByName(bitmapClass) as Class;
-				var bmpData:BitmapData=new classRef();
-				var returnBitmap:Bitmap=new Bitmap(bmpData);
-				return (returnBitmap);	
-			} catch (e:*) {
-				return (null);
-			}//catch
-			return (null);
-		}//createBitmap
 		
 		/**
 		 * Converts a <code>ByteArray</code> object to a native Flash display object. This may be
@@ -1184,7 +1020,7 @@ package swag.core {
 			localString=unescape (localString);
 			return (localString);
 		}//urlDecode
-		
+
 		/**
 		 * Retrieves an ordered list (<code>Array</code>), of the parameters for the specified method.
 		 * <p>The returned list will be an array of classes / types that can be used to determine what data type(s)
@@ -1288,40 +1124,6 @@ package swag.core {
 			}//for
 			return (false);
 		}//hasDeclaredConstant
-		
-		/**
-		 * Returns the parts, split up into discrete variables, of a supplied URL.
-		 * 
-		 * @param urlValue The URL to analyze.
-		 * 
-		 * @return An object containing "host", "port", "protocol", "path", and "parameters" values. 
-		 * 
-		 */
-		public static function getURLParts(urlValue:String):Object {
-			var reg:RegExp = /(?P<protocol>[a-zA-Z]+) : \/\/  (?P<host>[^:\/]*) (:(?P<port>\d+))?  ((?P<path>[^?]*))? ((?P<parameters>.*))? /x;
-			var results:Array = reg.exec(urlValue);
-			var returnObj:Object=new Object();
-			returnObj.protocol = results.protocol;
-			returnObj.domain = results.host;
-			returnObj.port = results.port;
-			returnObj.path = results.path;
-			returnObj.file = String(returnObj.path).substr(String(returnObj.path).lastIndexOf("/")+1);
-			returnObj.path=String(returnObj.path).split(returnObj.file).join("");
-			var paramsStr:String = results.parameters;
-			if(paramsStr!="") {				
-				returnObj.parameters = new Object();
-				if(paramsStr.charAt(0) == "?") {
-					paramsStr = paramsStr.substring(1);
-				}//if
-				var params:Array = paramsStr.split("&");
-				for each(var paramStr:String in params)	{
-					var param:Array = paramStr.split("=");
-					returnObj.parameters[param[0]] = param[1];
-				}//for
-			}//if
-			return (returnObj);
-		}//getURLParts
-		
 		
 	}//SwagDataTools class
 	

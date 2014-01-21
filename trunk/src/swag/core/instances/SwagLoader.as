@@ -17,10 +17,8 @@
 	import flash.net.URLRequest;
 	import flash.net.URLRequestHeader;
 	import flash.net.URLStream;
-	import flash.system.LoaderContext;
 	import flash.utils.ByteArray;
 	import flash.utils.getDefinitionByName;
-	import flash.utils.getTimer;
 	
 	import swag.core.SwagDataTools;
 	import swag.core.SwagDispatcher;
@@ -107,17 +105,12 @@
 		/**
 		 * @private 
 		 */
-		private var _returnType:*= null;
-		/**
-		 * @private
-		 * Stores delta values during load operations (used to calculate bps, etc.)
-		 */
-		private var _loadDelta:Object = null; 
+		private var _returnType:*=null;
 		/**
 		 * @private 
 		 */
-		private var _responseHeaders:Array=new Array();
-		 
+		private var _responseHeaders:Array=new Array();;
+		
 		/**
 		 * Default constructor for the class.
 		 *  
@@ -148,16 +141,12 @@
 		 * @param forceTransport The type of transport to use with the load, regardless of what <code>SwagLoader</code>
 		 * determines to be the best one. Valid load types can be found in <code>SwagLoader</code>'s constant values,
 		 * and include <code>SwagLoader.LOCALTRANSPORT</code> and <code>SwagLoader.REMOTETRANSPORT</code>.
-		 * @param headers Optional headers to include with the request (as name/value pairs). If <em>null</em>, default header data
-		 * will be sent.
-		 * @param cookies Optional cookies to include with the request (as name/value pairs). If <em>null</em>, default cookie data
-		 * will be sent.
 		 * 
 		 * @return <em>True</em> if the load was successfully started, <em>false</em> otherwise (for example, the 
 		 * <code>path</code> is <em>null</em> or empty, or the <code>SwagLoader</code> instance reports no available transport).
 		 * 
 		 */
-		public function load(pathRef:*=null, returnType:Class=null, forceTransport:String=null, headers:Object=null, cookies:Object=null):Boolean {
+		public function load(pathRef:*=null, returnType:Class=null, forceTransport:String=null):Boolean {
 			if (pathRef!=null) {
 				this.path=pathRef;
 			}//if
@@ -168,13 +157,8 @@
 			if ((forceTransport==null) || (forceTransport=="")) {
 				//Determine transport automatically since none was specified
 				forceTransport=this.transport;
-			}//ifc
+			}//if
 			this._responseHeaders=new Array();
-			this._loadDelta = new Object();
-			this._loadDelta.bytesLoaded = 0;
-			this._loadDelta.bytesTotal = 0;
-			this._loadDelta.timeStamp = getTimer();
-			this._loadDelta.startTimeStamp = this._loadDelta.timeStamp;
 			if (forceTransport==SwagLoader.LOCALTRANSPORT) {				
 				//Using local transport					
 				try {												
@@ -189,7 +173,7 @@
 					}//else						
 				} catch (error:*) {						
 					return (false);
-				}//catch					
+				}//catch				
 				this._stream=new FileStream();
 				this._stream.addEventListener(ProgressEvent.PROGRESS, this.onLoadProgress);
 				this._stream.addEventListener(Event.COMPLETE, this.onLoadComplete);
@@ -212,27 +196,6 @@
 				} catch (error:*) {
 					return (false);
 				}//catch
-				var customHeaders=new Array();
-				if (headers!=null) {
-					var headerCount:uint=0;				
-					for (var item in headers) {
-						customHeaders[headerCount]=new URLRequestHeader(item, headers[item]);
-						headerCount++;
-					}//for					
-				}//if
-				if (cookies!=null) {
-					var cookieCount:uint=0;
-					var cookieString:String=new String;
-					for (item in cookies) {
-						cookieString+=item+"="+cookies[item]+";";						
-					}//for
-					requestInstance.manageCookies=false;//Google uses this to track how many requests have been made!	
-					customHeaders.push(new URLRequestHeader("Cookie", cookieString));
-				}//if
-				if (customHeaders.length>0) {
-					requestInstance.requestHeaders=customHeaders;
-				}//if
-				//rhArray[2]=new URLRequestHeader("Cookie", "rand="+Math.round(Math.random()*1000000)+":");	
 				this._stream=new URLStream();
 				this._stream.addEventListener(ProgressEvent.PROGRESS, this.onLoadProgress);
 				this._stream.addEventListener(Event.COMPLETE, this.onLoadComplete);
@@ -279,11 +242,6 @@
 				return (false);
 			}//if
 			this._responseHeaders=new Array();
-			this._loadDelta = new Object();
-			this._loadDelta.bytesLoaded = 0;
-			this._loadDelta.bytesTotal = 0;
-			this._loadDelta.timeStamp = getTimer();
-			this._loadDelta.startTimeStamp = this._loadDelta.timeStamp;
 			if ((forceTransport==null) || (forceTransport=="") || (forceTransport==SwagLoader.LOCALTRANSPORT)) {
 				if ((this.transport==SwagLoader.LOCALTRANSPORT) || (forceTransport==SwagLoader.LOCALTRANSPORT)) {
 					//Using local transport					
@@ -362,25 +320,7 @@
 		 */
 		private function onLoadProgress(eventObj:ProgressEvent):void {			
 			this._stream.readBytes(this.loadedBinaryData, this.loadedBinaryData.length);
-			var loadProgressEvent:SwagLoaderEvent = new SwagLoaderEvent(SwagLoaderEvent.DATA);
-			loadProgressEvent.bytesLoaded = eventObj.bytesLoaded;
-			loadProgressEvent.bytesTotal = eventObj.bytesTotal;
-			loadProgressEvent.bytesPercent = loadProgressEvent.bytesLoaded / loadProgressEvent.bytesTotal; //Let listener determine precision
-			var bytesDelta:Number = loadProgressEvent.bytesLoaded - this._loadDelta.bytesLoaded;
-			var timeDelta:Number = (Number(getTimer()) - Number(this._loadDelta.timeStamp));
-			var elapsedMSecs:Number = Number(getTimer()) - Number(this._loadDelta.startTimeStamp);
-			loadProgressEvent.BPS = bytesDelta / (timeDelta / 1000); //Byte delta over time delta = bytes per second
-			//Based on current transfer rate...
-			if (loadProgressEvent.BPS == 0) {
-				var remainMSecsEstimate:Number = Number.POSITIVE_INFINITY;
-			} else {
-				remainMSecsEstimate = (loadProgressEvent.bytesTotal - loadProgressEvent.bytesLoaded) / (bytesDelta / timeDelta);
-			}//else
-			loadProgressEvent.msecsElapsed = elapsedMSecs;
-			loadProgressEvent.msecsRemainEst = remainMSecsEstimate;
-			this._loadDelta.bytesTotal = loadProgressEvent.bytesLoaded;
-			this._loadDelta.timeStamp = getTimer();
-			SwagDispatcher.dispatchEvent(loadProgressEvent, this);
+			SwagDispatcher.dispatchEvent(new SwagLoaderEvent(SwagLoaderEvent.DATA), this);
 		}//onLoadProgress
 		
 		/**		 
@@ -409,6 +349,7 @@
 				this._stream.removeEventListener(Event.COMPLETE, this.onLoadComplete);
 				this._stream.removeEventListener(IOErrorEvent.IO_ERROR, this.onLoadError);
 				this._stream.removeEventListener(HTTPStatusEvent.HTTP_STATUS, this.onLoadHTTPStatus);
+				this._stream.removeEventListener(HTTPStatusEvent.HTTP_RESPONSE_STATUS, this.onResponseStatus);
 				//TODO: handle the error
 			}//finally
 		}//onLoadError
@@ -427,6 +368,7 @@
 			this._stream.removeEventListener(Event.COMPLETE, this.onSendComplete);
 			this._stream.removeEventListener(IOErrorEvent.IO_ERROR, this.onSendError);			
 			this._stream.removeEventListener(HTTPStatusEvent.HTTP_STATUS, this.onSendHTTPStatus);
+			this._stream.removeEventListener(HTTPStatusEvent.HTTP_RESPONSE_STATUS, this.onResponseStatus);
 			//TODO: handle the error
 		}//onSendError
 		
@@ -451,15 +393,7 @@
 					loadCompleted=false;
 					this._uiObjectLoader=new Loader();
 					this._uiObjectLoader.contentLoaderInfo.addEventListener(Event.INIT, this.onUIObjectLoadComplete);
-					var context:LoaderContext=new LoaderContext();
-					context.allowCodeImport = true;
-					try {
-						context.allowLoadBytesCodeExecution = true;
-					} catch (err:*) {						
-					}
-					context.applicationDomain=null;
-					context.checkPolicyFile=false;
-					this._uiObjectLoader.loadBytes(this._loadedBinaryData, context);					
+					this._uiObjectLoader.loadBytes(this._loadedBinaryData);					
 				} else {
 					//Default to ByteArray
 					this._loadedData=this._loadedBinaryData;
@@ -469,6 +403,7 @@
 			this._stream.removeEventListener(Event.COMPLETE, this.onLoadComplete);
 			this._stream.removeEventListener(IOErrorEvent.IO_ERROR, this.onLoadError);
 			this._stream.removeEventListener(HTTPStatusEvent.HTTP_STATUS, this.onLoadHTTPStatus);
+			this._stream.removeEventListener(HTTPStatusEvent.HTTP_RESPONSE_STATUS, this.onResponseStatus);
 			if (loadCompleted) {
 				SwagDispatcher.dispatchEvent(new SwagLoaderEvent(SwagLoaderEvent.COMPLETE), this);
 			}//if
@@ -493,6 +428,7 @@
 			this._stream.removeEventListener(Event.COMPLETE, this.onSendComplete);
 			this._stream.removeEventListener(IOErrorEvent.IO_ERROR, this.onSendError);
 			this._stream.removeEventListener(HTTPStatusEvent.HTTP_STATUS, this.onSendHTTPStatus);
+			this._stream.removeEventListener(HTTPStatusEvent.HTTP_RESPONSE_STATUS, this.onResponseStatus);
 			SwagDispatcher.dispatchEvent(new SwagLoaderEvent(SwagLoaderEvent.COMPLETE), this);
 		}//onSendComplete
 		
@@ -513,27 +449,28 @@
 		 * @private		 
 		 */
 		private function onLoadHTTPStatus(eventObj:HTTPStatusEvent):void {
+			//Always invoked after load completed so close the stream...
 			this._stream.close();
 			if (eventObj.status==400) {
 				var event:SwagErrorEvent=new SwagErrorEvent(SwagErrorEvent.FAILEDOPERATIONERROR);
 				event.code=400;
 				event.description="The server request was bad or malformed.";
 				event.remedy="The network connection may be unstable. Try resetting the network hardware."
-				SwagDispatcher.dispatchEvent(event, this);
+				SwagDispatcher.dispatchEvent(event, this);				
 			}//if
 			if (eventObj.status==401) {
 				event=new SwagErrorEvent(SwagErrorEvent.FAILEDOPERATIONERROR);
 				event.code=401;
 				event.description="The request was not authorized.";
 				event.remedy="A \"WWW-Authenticate\" field should be added to the request header (see RFC2616 Section 14)."
-				SwagDispatcher.dispatchEvent(event, this);
+				SwagDispatcher.dispatchEvent(event, this);				
 			}//if
 			if (eventObj.status==402) {
 				event=new SwagErrorEvent(SwagErrorEvent.FAILEDOPERATIONERROR);
 				event.code=402;
 				event.description="The server requires payment for this transaction.";
 				event.remedy="This is most likely a paid resource and is restricted. Contact the site owner for more information."
-				SwagDispatcher.dispatchEvent(event, this);
+				SwagDispatcher.dispatchEvent(event, this);				
 			}//if
 			if (eventObj.status==403) {
 				event=new SwagErrorEvent(SwagErrorEvent.FAILEDOPERATIONERROR);
@@ -742,15 +679,6 @@
 		}//get sendBinaryData	
 		
 		/**
-		 * @return A reference to the data loaded by the <code>SwagLoader</code> instance in its native format,
-		 * as specified when the load operation was started.
-		 * <p>If a load hasn't completed or started yet, this value will be <em>null</em>.</p> 		 
-		 */
-		public function get loadedData():* {
-			return (this._loadedData);
-		}//get loadedData
-		
-		/**
 		 * @return A named array of response headers received from the last server request. If no request has been issued, the request
 		 * was not remote, or it hasn't been responded to yet, this will be an empty array (length 0). This array may also not contain
 		 * values if the server doesn't correctly return response headers.		 
@@ -758,6 +686,15 @@
 		public function get responseHeaders():Array {
 			return (this._responseHeaders);
 		}//get responseHeaders
+		
+		/**
+		 * @return A reference to the data loaded by the <code>SwagLoader</code> instance in its native format,
+		 * as specified when the load operation was started.
+		 * <p>If a load hasn't completed or started yet, this value will be <em>null</em>.</p> 		 
+		 */
+		public function get loadedData():* {
+			return (this._loadedData);
+		}//get loadedData
 		
 		/**
 		 * Identifies the type of transport being used to load the file data.
@@ -829,45 +766,29 @@
 		 * 
 		 */
 		public static function getFileName(fullPath:*=null, includeExtension:Boolean=true):String {
-			trace ("getFileName=" + fullPath);
-			var fileName:String = new String();
-			trace ("1");
-			if (fullPath == null) {
-				trace ("returning 1 " + fileName);
+			var fileName:String=new String();
+			if (fullPath==null) {
 				return (fileName);
 			}//if
-			trace ("2");
-			trace ("fullPath=" + fullPath);
-			trace ("File=" + File);
-			if (File!=null) {
-				if (fullPath is File) {
-					trace ("2.1");
-					fileName = fullPath.url;
-				}//if
+			if (fullPath is File) {				
+				fileName=fullPath.url;
 			} else if (fullPath is String) {
-					trace ("2.2");
 				fileName=fullPath;
 			} else {
-				trace ("returning 2 " + fileName);
 				return (fileName);
 			}//else
-			trace ("3");
 			//Replace any forward slashes with bag slashes for consistency
-			fileName = SwagDataTools.replaceString(fileName, "/", "\\");
-			trace ("4");
-			var finalSlashPosition:int = fileName.lastIndexOf("/");
-			trace ("5");
+			fileName=SwagDataTools.replaceString(fileName, "/", "\\");
+			var finalSlashPosition:int=fileName.lastIndexOf("/");
 			if (finalSlashPosition>-1) {				
 				fileName=fileName.substr((finalSlashPosition+1), fileName.length);
 			}//if
 			if (!includeExtension) {
-				trace ("6");
 				var periodPosition:int=fileName.lastIndexOf(".");
 				if (periodPosition>-1) {				
 					fileName=fileName.substring(0, periodPosition);
 				}//if
 			}//if
-			trace ("returning 3 " + fileName);
 			return (fileName);
 		}//getFileName
 		
@@ -881,12 +802,10 @@
 		 * if no valid file name could be found in the path. 
 		 * 
 		 */
-		public static function getFileExtension(fullPath:*= null):String {	
-			trace ("getFileExtension=" + fullPath);
+		public static function getFileExtension(fullPath:*=null):String {			
 			var fileExtension:String=new String();			
-			var fileName:String = getFileName(fullPath, true);
-			trace ("fileName=" + fileName);
-			if (fileName == "") {		
+			var fileName:String=getFileName(fullPath, true);			
+			if (fileName=="") {				
 				return (fileExtension);
 			}//if			
 			var periodPosition:int=fileName.lastIndexOf(".");

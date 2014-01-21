@@ -1,4 +1,4 @@
-﻿package swag.core.instances {
+package swag.core.instances {
 	
 	import flash.display.FrameLabel;
 	import flash.display.MovieClip;
@@ -43,34 +43,7 @@
 		 * @private 
 		 */
 		private var _rangeReset:Boolean=false;
-		/**
-		 * @private 
-		 */
-		private var _isPlaying:Boolean=false;
-		/**
-		 * @private 
-		 */
-		private var _wasPlaying:Boolean=false;
-		/**
-		 * @private 
-		 */
-		private var _loopPlayback:Boolean=false;
-		/**
-		 * @private 
-		 */
-		private var _frameCounter:Number=new Number();
-		/**
-		 * @private 
-		 */
-		private var _loopCounter:int=new int();
-		/**
-		 * @private 
-		 */
-		private var _playSpeed:Number=new Number();
-		/**
-		 * @private 
-		 */
-		private var _frameTriggers:Vector.<Object>=new Vector.<Object>();
+		
 		
 		/**
 		 * Default constructor for the class.
@@ -121,26 +94,15 @@
 		 * @param endFrame The frame label or frame number to end the playback at. If this frame comes before  the
 		 * <code>startFrame</code>, the movie clip will play backwards.
 		 * @param resetOnEnd If <em>true</em>, the associated movie clip will reset back to the start of the range,
-		 * otherwise (<em>false</em>), it will stop on the ending frame.
-		 * @param loop  If <em>true</em>, the associated movie clip will play continuously in a loop until it's stopped or until
-		 * the specified number of loops has elapsed.
-		 * @param repeatLoops The number of loops to repeat play back until looping completes. If less than 1, looping continues
-		 * indefinitely until stopped. A value of 1 repeats the animation once (plays twice), 2 repeats twice (plays three times), 
-		 * etc.
-		 * @param playSpeed The playback ratio speed, in frames, to play the animation at. A ratio of 1 plays back at
-		 * normal speed. A ratio of 0.5 plays at half speed. A ratio of 2 plays at double speed. And so on.
+		 * otherwise (<em>false</em>), it will stop on the ending frame. 
 		 * 
 		 * @return <em>True</em> if the animation was successfully started, <em>false</em> if it was not (the frames
 		 * specified were out of range or otherwise invalid).
 		 * 
 		 */
-		public function playRange(startFrame:*, endFrame:*, resetOnEnd:Boolean=false, loop:Boolean=false, repeatLoops:int=0, playSpeed:Number=1):Boolean {
-			this._isPlaying=false;
-			this._loopPlayback=loop;
-			this.stopFrameMonitor();
-			//this.target.removeEventListener(Event.ENTER_FRAME, this.frameMonitor);
+		public function playRange(startFrame:*, endFrame:*, resetOnEnd:Boolean=false):Boolean {
 			if (this.target==null) {
-				this._isPlaying=false;
+				return (false);
 			}//if
 			this._rangeStart=this.findFrame(startFrame);			
 			this._rangeEnd=this.findFrame(endFrame);			
@@ -155,12 +117,8 @@
 				SwagDispatcher.dispatchEvent(event, this);
 			} else {				
 				this._rangeReset=resetOnEnd;
-				this._playSpeed=playSpeed;		
-				this._loopCounter=repeatLoops;
-				this._frameCounter=Number(this._rangeStart);
-				this._isPlaying=true;
 				this.target.gotoAndStop(this._rangeStart);
-				this.startFrameMonitor();
+				this.target.addEventListener(Event.ENTER_FRAME, this.frameMonitor);
 			}//else
 			return (true);
 		}//playRange
@@ -175,23 +133,14 @@
 		 * be found before the end of the clip, the playback range will always include the last frame of the clip.		 * 
 		 * @param resetOnEnd If <em>true</em>, the associated movie clip will reset back to the start of the range,
 		 * otherwise (<em>false</em>), it will stop on the ending frame. 
-		 * @param loop  If <em>true</em>, the associated movie clip will play continuously in a loop until it's stopped or until
-		 * the specified number of loops has elapsed.
-		 * @param repeatLoops The number of loops to repeat play back until looping completes. If less than 1, looping continues
-		 * indefinitely until stopped. A value of 1 repeats the animation once (plays twice), 2 repeats twice (plays three times), 
-		 * etc.
-		 * @param playSpeed The playback ratio speed, in frames, to play the animation at. A ratio of 1 plays back at
-		 * normal speed. A ratio of 0.5 plays at half speed. A ratio of 2 plays at double speed. And so on.
 		 * 
 		 * @return <em>True</em> if the animation was successfully started, <em>false</em> if it was not (the frame
 		 * specified were out of range or otherwise invalid).
 		 * 
 		 */
-		public function playToNextLabel(startFrame:*, includeLabelFrame:Boolean=false, resetOnEnd:Boolean=false, loop:Boolean=false, repeatLoops:uint=0, playSpeed:Number=1):Boolean {
-			this._isPlaying=false;
+		public function playToNextLabel(startFrame:*, includeLabelFrame:Boolean=false, resetOnEnd:Boolean=false):Boolean {
 			this._rangeStart=this.findFrame(startFrame);			
 			this._rangeEnd=this.findFrameLabelAfter(this._rangeStart, includeLabelFrame);
-			this.stopFrameMonitor();
 			if ((this._rangeStart==0) || (this._rangeEnd==0)) {				
 				return (false);
 			}//if
@@ -204,20 +153,12 @@
 			} else {
 				if (this.target==this) {				
 					super.gotoAndStop(this._rangeStart);
-					this._playSpeed=playSpeed;
-					this._frameCounter=Number(this._rangeStart);
-					this._loopCounter=repeatLoops;
-					this._rangeReset=resetOnEnd;		
-					this.startFrameMonitor();
-					this._isPlaying=true;
+					this._rangeReset=resetOnEnd;				
+					super.addEventListener(Event.ENTER_FRAME, this.frameMonitor);
 				} else if (this.target!=null) {
 					this.target.gotoAndStop(this._rangeStart);
-					this._playSpeed=playSpeed;
-					this._loopCounter=repeatLoops;
-					this._frameCounter=Number(this._rangeStart);
-					this._rangeReset=resetOnEnd;
-					this.startFrameMonitor();
-					this._isPlaying=true;
+					this._rangeReset=resetOnEnd;				
+					this.target.addEventListener(Event.ENTER_FRAME, this.frameMonitor);
 				} else {
 					return (false);
 				}//else
@@ -226,71 +167,15 @@
 		}//playToNextLabel
 		
 		/**
-		 * Pauses playback (if currently running). Use the <code>resume</code> method
-		 * to restart the animation from the current playback position. 
-		 */
-		public function pause():void {
-			if (this._isPlaying) {
-				this._wasPlaying=true;
-				this._isPlaying=false;
-				this.stopFrameMonitor();
-				this.stop();
-			}//if
-		}//pause
-		
-		/**
-		 * Resumes playback from the currently paused position. If currently playing,
-		 * or if playback wasn't stopped, this method does nothing. 
-		 */
-		public function resume():void {
-			if (this._wasPlaying) {
-				this.startFrameMonitor();
-				this._wasPlaying=false;
-				this._isPlaying=true;
-			}//if
-		}//resume
-		
-		private function invokeFrameTriggers():void {
-			for (var count:uint=0; count<this._frameTriggers.length; count++) {
-				var currentTrigger:Object=this._frameTriggers[count] as Object;
-				if (this.target.currentFrame==currentTrigger.frame) {
-					currentTrigger.callBack();
-				}//if
-			}//for
-		}//invokeFrameTriggers
-		
-		public function addFrameTrigger(frame:*, callBack:Function):void {
-			var triggerObj:Object=new Object();
-			triggerObj.frame=this.findFrame(frame);
-			triggerObj.callBack=callBack;
-			this._frameTriggers.push(triggerObj);
-		}//addFrameTrigger
-		
-		public function removeFrameTrigger(frame:*, callBack:Function):void {
-			var compressedTriggers:Vector.<Object>=new Vector.<Object>();
-			var matchFrame:int=this.findFrame(frame);
-			for (var count:uint=0; count<this._frameTriggers.length; count++) {
-				var currentTrigger:Object=this._frameTriggers[count] as Object;
-				if ((currentTrigger.frame!=matchFrame) || (currentTrigger.callBack!=callBack)) {
-					compressedTriggers.push(currentTrigger);
-				}//if
-			}//for
-			this._frameTriggers=compressedTriggers;
-		}//removeFrameTrigger
-		
-		/**
 		 * Stops playback of the associated MovieClip object. This is the same as calling <code>stop</code>
 		 * on the movie clip itself but this method also broadcasts a <code>SwagMovieClipEvent.END</code> event.
 		 */
 		override public function stop():void {
-			this.stopFrameMonitor();
-			//this.target.removeEventListener(Event.ENTER_FRAME, this.frameMonitor);
 			if (this.target==this) {
 				super.stop();
 			} else {
 				this.target.stop();
 			}//else
-			this._isPlaying=false;
 		}//stop
 		
 		/**
@@ -300,14 +185,11 @@
 		 * @param frame The target frame to place the movie clip at.
 		 */
 		override public function gotoAndStop(frame:Object, scene:String = null):void {
-			this.stopFrameMonitor();
-			//this.target.removeEventListener(Event.ENTER_FRAME, this.frameMonitor);
 			if (this.target==this) {
 				super.gotoAndStop(frame, scene);
 			} else {
 				this.target.gotoAndStop(frame, scene);
 			}//else
-			this._isPlaying=false;
 		}//gotoAndStop
 		
 		/**
@@ -315,8 +197,6 @@
 		 * on the movie clip itself but this method also broadcasts a <code>SwagMovieClipEvent.START</code> event.
 		 */
 		override public function play():void {
-			this.stopFrameMonitor();
-			//this.target.removeEventListener(Event.ENTER_FRAME, this.frameMonitor);
 			if (this.target==this) {
 				super.play();
 			} else {
@@ -324,7 +204,6 @@
 			}//else
 			var event:SwagMovieClipEvent=new SwagMovieClipEvent(SwagMovieClipEvent.START);
 			SwagDispatcher.dispatchEvent(event, this);
-			this._isPlaying=true;
 		}//play
 		
 		/**
@@ -335,8 +214,6 @@
 		 * @param frame The target frame to place the movie clip at and begin playback.
 		 */
 		override public function gotoAndPlay(frame:Object, scene:String = null):void {
-			this.stopFrameMonitor();
-			//this.target.removeEventListener(Event.ENTER_FRAME, this.frameMonitor);
 			if (this.target==this) {
 				super.gotoAndPlay(frame, scene);
 			} else {
@@ -344,25 +221,7 @@
 			}//else
 			var event:SwagMovieClipEvent=new SwagMovieClipEvent(SwagMovieClipEvent.START);
 			SwagDispatcher.dispatchEvent(event, this);
-			this._isPlaying=true;
 		}//gotoAndPlay
-		
-		private function startFrameMonitor():void {
-			this.stopFrameMonitor();
-			if ((this.target==null) || (this.target==this)) {
-				super.addEventListener(Event.ENTER_FRAME, this.frameMonitor);
-			} else {
-				this._target.addEventListener(Event.ENTER_FRAME, this.frameMonitor);
-			}//else
-		}//startFrameMonitor
-		
-		private function stopFrameMonitor():void {
-			if ((this.target==null) || (this.target==this)) {
-				super.removeEventListener(Event.ENTER_FRAME, this.frameMonitor);
-			} else {
-				this._target.removeEventListener(Event.ENTER_FRAME, this.frameMonitor);
-			}//else
-		}//stopFrameMonitor
 		
 		/**
 		 * Monitors the frame playback for the associated movie clip.
@@ -372,92 +231,41 @@
 		 */
 		private function frameMonitor (eventObj:Event):void {
 			if (this.target==null) {
-				this._isPlaying=false;
 				return;
 			}//if
-			this._isPlaying=true;
+			var currentFrame:int=this.target.currentFrame;
 			if (this._rangeStart<this._rangeEnd) {
-				//play forward				
-				this._frameCounter+=this._playSpeed;
-				var currentFrame:int=int(Math.floor(this._frameCounter));
-				if (this._loopPlayback) {
-					if (currentFrame>this._rangeEnd) {						
-						if (this._loopCounter>0) {
-							this._loopCounter--;
-							this._frameCounter-=this._playSpeed;
-							this._frameCounter=this._rangeStart+(this._frameCounter-this._rangeEnd);							
-							currentFrame=this._rangeStart;
-						}//if						
-					}//if
-				}//if
-				if (currentFrame<=this._rangeEnd) {
-					if (this.target==this) {
-						super.gotoAndStop(currentFrame);
-						this.invokeFrameTriggers();
-					} else {
-						this.target.gotoAndStop(currentFrame);
-						this.invokeFrameTriggers();
-					}//else
+				//play forward
+				if (currentFrame<this._rangeEnd) {
+					currentFrame++;	
+					this.target.gotoAndStop(currentFrame);
 					var event:SwagMovieClipEvent=new SwagMovieClipEvent(SwagMovieClipEvent.FRAME);
-					SwagDispatcher.dispatchEvent(event, this);					
+					SwagDispatcher.dispatchEvent(event, this);
+					return;
 				} else {
-					if (this.target==this) {
-						super.gotoAndStop(this._rangeEnd);
-						this.invokeFrameTriggers();
-					} else {
-						this.target.gotoAndStop(this._rangeEnd);
-						this.invokeFrameTriggers();
-					}//else
-					this.stopFrameMonitor();
-					//this.target.removeEventListener(Event.ENTER_FRAME, this.frameMonitor);
-					this._isPlaying=false;
+					this.target.gotoAndStop(this._rangeEnd);
 					event=new SwagMovieClipEvent(SwagMovieClipEvent.END);
 					SwagDispatcher.dispatchEvent(event, this);
+					this.target.removeEventListener(Event.ENTER_FRAME, this.frameMonitor);
+					return;
 				}//else
-				return;
 			} else {
 				//play backwards
-				this._frameCounter-=this._playSpeed;
-				currentFrame=int(Math.ceil(this._frameCounter));
-				if (this._loopPlayback) {
-					if (currentFrame<this._rangeEnd) {
-						if (this._loopCounter>0) {
-							this._loopCounter--;
-							this._frameCounter+=this._playSpeed;
-							this._frameCounter=this._rangeStart-(this._rangeEnd-this._frameCounter);
-							currentFrame=this._rangeStart;
-						}//if
-					}//if
-				}//if
-				if (currentFrame>=this._rangeEnd) {
-					if (this.target==this) {
-						super.gotoAndStop(currentFrame);
-						this.invokeFrameTriggers();
-					} else {
-						this.target.gotoAndStop(currentFrame);
-						this.invokeFrameTriggers();
-					}//else
+				if (currentFrame>this._rangeEnd) {
+					currentFrame--;
+					this.target.gotoAndStop(currentFrame);
 					event=new SwagMovieClipEvent(SwagMovieClipEvent.FRAME);
-					SwagDispatcher.dispatchEvent(event, this);					
+					SwagDispatcher.dispatchEvent(event, this);
+					return;
 				} else {
-					if (this.target==this) {
-						super.gotoAndStop(this._rangeEnd);
-						this.invokeFrameTriggers();
-					} else {
-						this.target.gotoAndStop(this._rangeEnd);
-						this.invokeFrameTriggers();
-					}//else
-					this.stopFrameMonitor();
-					//this.target.removeEventListener(Event.ENTER_FRAME, this.frameMonitor);
-					this._isPlaying=false;
+					this.target.gotoAndStop(this._rangeEnd);
 					event=new SwagMovieClipEvent(SwagMovieClipEvent.END);
 					SwagDispatcher.dispatchEvent(event, this);
+					this.target.removeEventListener(Event.ENTER_FRAME, this.frameMonitor);
+					return;
 				}//else
-				return;
 			}//else
-			this.stopFrameMonitor();
-			//this.target.removeEventListener(Event.ENTER_FRAME, this.frameMonitor);
-			this._isPlaying=false;
+			this.target.removeEventListener(Event.ENTER_FRAME, this.frameMonitor);
 		}//frameMonitor
 		
 		/**
@@ -589,15 +397,6 @@
 				return (this._target);
 			}//else
 		}//get target	
-		
-		/**
-		 * 
-		 * @return <em>True</em> if playback is currently active, <em>false</em> otherwise. 
-		 * 
-		 */
-		public function get isClipPlaying():Boolean {
-			return (this._isPlaying);
-		}//get isClipPlaying
 		
 	}//SwagMovieClip class
 	
