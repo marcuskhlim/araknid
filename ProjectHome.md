@@ -1,0 +1,3 @@
+An Adobe AIR application that crawls and archives web pages and assets such as images and scripts into a searchable/convertible SQLite database file. Use it to create a deep search index of your (or any other) site, your intranet, or even the whole web.
+Uses user-defined regular expressions to match and extrapolate links and other dynamic site information. Built on SwAG Toolkit ActionScript 3 application framework, user interface developed in Flash CS6 (.fla file).
+Dynamically supports latest versions of Adobe AIR on mobile.
